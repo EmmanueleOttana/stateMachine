@@ -36,7 +36,6 @@ public class LoginService {
 
         String JWT = generateJWT(userFromDB);
 
-        userFromDB.setPassword(null);
         LoginRTO out = new LoginRTO();
         out.setJWT(JWT);
         out.setUser(userFromDB);
@@ -57,10 +56,12 @@ public class LoginService {
 
     public String getJWT(User user){
         Date expiresAt = convertToDateViaInstant(LocalDateTime.now().plusDays(15));
+        String[] roles = user.getRoles().stream().map(role -> role.getName()).toArray(String[]::new);
         return JWT.create()
                 .withIssuer("develhope-demo")
                 .withIssuedAt(new Date())
                 .withExpiresAt(expiresAt)
+                .withClaim("roles",String.join(",",roles))
                 .withClaim("id", user.getId())
                 .sign(Algorithm.HMAC512(this.secret));
 

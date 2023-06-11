@@ -1,7 +1,9 @@
 package co.develhope.login_system;
 
+import co.develhope.login_system.user.utils.Roles;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
+import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
@@ -12,6 +14,10 @@ import org.springframework.security.web.authentication.UsernamePasswordAuthentic
 
 //https://stackoverflow.com/questions/43794721/spring-boot-h2-console-throws-403-with-spring-security-1-5-2
 @EnableWebSecurity
+@EnableGlobalMethodSecurity(
+        prePostEnabled = true,
+        securedEnabled = true,
+        jsr250Enabled = true)
 public class WebSecurity extends WebSecurityConfigurerAdapter {
 
     @Autowired
@@ -28,6 +34,9 @@ public class WebSecurity extends WebSecurityConfigurerAdapter {
         http.authorizeRequests()
                 .antMatchers("/auth/**").permitAll()
                 .antMatchers("/h2-console/**").permitAll()
+             /* .antMatchers("/admin/**").hasAnyRole("ROLE_"+ Roles.ADMIN
+                            ,"ROLE_"+ Roles.OWNER,"ROLE_"+ Roles.SUPER_ADMIN)
+                .antMatchers("/app/**").hasAnyRole("ROLE_"+Roles.REGISTERED) */
                 .anyRequest().authenticated();
 
         http.csrf().disable();

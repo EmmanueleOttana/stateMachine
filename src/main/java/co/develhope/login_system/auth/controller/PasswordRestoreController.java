@@ -20,9 +20,7 @@ public class PasswordRestoreController {
     public void passwordRequest(@RequestBody RequestPasswordDTO requestPasswordDTO) throws Exception{
         try {
             passwordService.request(requestPasswordDTO);
-        }catch (Exception e){
-
-        }
+        }catch (Exception ignored){}
 
     }
 

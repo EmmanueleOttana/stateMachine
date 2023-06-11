@@ -11,6 +11,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.WebAuthenticationDetailsSource;
 import org.springframework.stereotype.Component;
@@ -21,6 +23,8 @@ import javax.servlet.ServletException;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.util.Arrays;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 
@@ -31,6 +35,13 @@ public class JwtTokenFilter extends OncePerRequestFilter {
     private UserRepository userRepo;
     @Value("${JWT.secret}")
     private String secret;
+
+    private Collection<? extends GrantedAuthority> getAuthorities(User user){
+        if(user == null || !user.isActive()) return List.of();
+        return Arrays.asList(user.getRoles().stream()
+                .map(role -> new SimpleGrantedAuthority("ROLE_"+role.getName()))
+                .toArray(SimpleGrantedAuthority[]::new));
+    }
 
     @Override
     protected void doFilterInternal(HttpServletRequest request,
@@ -45,7 +56,12 @@ public class JwtTokenFilter extends OncePerRequestFilter {
         }
 
         // Get jwt token and validate
-        final String token = header.trim();
+        String token = null;
+        try{
+            token = header.split(" ")[1].trim();
+        }catch (JWTVerificationException ex){
+            chain.doFilter(request, response);
+        }
 
         DecodedJWT decoded;
         try {
@@ -64,12 +80,11 @@ public class JwtTokenFilter extends OncePerRequestFilter {
         }
 
         User user = userDetails.get();
-        user.setPassword(null);
         user.setActivationCode(null);
         user.setPasswordResetCode(null);
 
         UsernamePasswordAuthenticationToken authentication = new UsernamePasswordAuthenticationToken(
-                user, null, List.of()
+                user, null, getAuthorities(user)
         );
 
         authentication.setDetails(

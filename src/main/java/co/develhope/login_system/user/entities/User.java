@@ -3,6 +3,7 @@ package co.develhope.login_system.user.entities;
 import lombok.Data;
 import javax.persistence.*;
 import java.time.LocalDateTime;
+import java.util.Set;
 
 
 @Entity
@@ -29,6 +30,14 @@ public class User {
     private String password;
 
     private LocalDateTime jwtCreatedOn;
+
+    @ManyToMany(fetch = FetchType.EAGER, cascade = CascadeType.ALL)
+    @JoinTable(name = "USER_ROLES",
+    joinColumns = {
+            @JoinColumn(name = "USER_ID")},
+    inverseJoinColumns = {
+            @JoinColumn(name = "ROLE_ID")})
+    private Set<Role> roles;
 
 }
 
